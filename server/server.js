@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
-const { getDB } = require('./mongoClient');
+const { getDB, connectToMongoDB } = require('./mongoClient');
 const bcrypt = require('bcryptjs');
 
 const app = express();
