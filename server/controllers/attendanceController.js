@@ -53,21 +53,21 @@ exports.markAttendance = async (req, res) => {
   const date = new Date().toISOString().split('T')[0];
 
   try {
-    const db = getDB();
-    let attendance = await db.collection('attendance').findOne({ employee_id, date });
+    let attendance = await prisma.attendance.findFirst({ where: { employee_id, date } });
 
     if (!attendance) {
       if (type !== 'morning_in') {
         return res.status(400).json({ message: 'Must mark Morning IN first' });
       }
-      const result = await db.collection('attendance').insertOne({
-        employee_id,
-        date,
-        morning_in: new Date(),
-        remarks: req.body.remarks || null,
-        created_at: new Date()
+      attendance = await prisma.attendance.create({
+        data: {
+          employee_id,
+          date,
+          morning_in: new Date(),
+          remarks: req.body.remarks || null,
+          created_at: new Date()
+        }
       });
-      attendance = { _id: result.insertedId, employee_id, date, morning_in: new Date(), remarks: req.body.remarks || null, created_at: new Date() };
     } else {
       if (attendance[type]) {
         return res.status(400).json({ message: 'Already marked' });
@@ -89,30 +89,26 @@ exports.markAttendance = async (req, res) => {
           }
       }
 
-      await db.collection('attendance').updateOne({ _id: attendance._id }, { $set: updateData });
-      attendance = { ...attendance, ...updateData };
+      attendance = await prisma.attendance.update({
+        where: { id: attendance.id },
+        data: updateData
+      });
     }
 
     // Log
-    await db.collection('attendanceLog').insertOne({
-      employee_id,
-      action: type,
-      timestamp: new Date()
+    await prisma.attendanceLog.create({
+      data: {
+        employee_id,
+        action: type,
+        timestamp: new Date()
+      }
     });
 
     // Fetch attendance with related user for syncing
-    const attendanceWithUser = await db.collection('attendance').aggregate([
-      { $match: { _id: attendance._id } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'employee_id',
-          foreignField: 'employee_id',
-          as: 'user'
-        }
-      },
-      { $unwind: '$user' }
-    ]).toArray();
+    const attendanceWithUser = await prisma.attendance.findMany({
+      where: { id: attendance.id },
+      include: { user: true }
+    });
     const attendanceWithUserRecord = attendanceWithUser[0];
 
     // Sync (local Excel + Google Sheets if configured)
@@ -173,9 +169,7 @@ exports.getAllAttendance = async (req, res) => {
 exports.deleteAttendance = async (req, res) => {
     const { id } = req.params;
     try {
-        const db = getDB();
-        const { ObjectId } = require('mongodb');
-        await db.collection('attendance').deleteOne({ _id: new ObjectId(id) });
+        await prisma.attendance.delete({ where: { id: parseInt(id) } });
         res.json({ message: 'Attendance record deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });

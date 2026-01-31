@@ -3,34 +3,34 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          Int      @id @default(autoincrement())
   employee_id String   @unique
   name        String
   email       String   @unique
   password    String
   role        String   @default("EMPLOYEE")
   status      Boolean  @default(true)
-  created_at  DateTime @default(now()) @db.Date
+  created_at  DateTime @default(now())
   attendance  Attendance[]
 }
 
 model Attendance {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          Int      @id @default(autoincrement())
   employee_id String
   user        User     @relation(fields: [employee_id], references: [employee_id])
   date        String   // YYYY-MM-DD (keeps day-level uniqueness)
-  morning_in  DateTime? @db.Date
-  lunch_out   DateTime? @db.Date
-  lunch_in    DateTime? @db.Date
+  morning_in  DateTime?
+  lunch_out   DateTime?
+  lunch_in    DateTime?
   lunch_in_remarks String?
-  office_out  DateTime? @db.Date
+  office_out  DateTime?
   remarks     String?
-  created_at  DateTime @default(now()) @db.Date
+  created_at  DateTime @default(now())
 
   @@unique([employee_id, date])
 }

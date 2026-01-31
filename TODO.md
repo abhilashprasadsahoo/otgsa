@@ -1,7 +1,10 @@
-# Migration to MongoDB
+# Remove Prisma and Use Direct MongoDB
 
 ## Steps to Complete
-- [x] Update schema.prisma to use MongoDB provider and adjust models
-- [x] Update .env file with MongoDB DATABASE_URL
-- [x] Regenerate Prisma client (done via run_project.bat)
-- [x] Test the application (project launched successfully)
+- [ ] Update package.json to remove Prisma dependencies and add mongodb driver
+- [ ] Create MongoDB connection module
+- [ ] Update authController.js to use MongoDB directly
+- [ ] Update attendanceController.js to use MongoDB directly
+- [ ] Remove prismaClient.js and prisma folder
+- [ ] Update server.js to use MongoDB connection
+- [ ] Test the application

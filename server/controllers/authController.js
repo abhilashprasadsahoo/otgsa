@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../prismaClient');
-const { getDB } = require('../mongoClient');
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -69,10 +68,8 @@ exports.register = async (req, res) => {
 exports.deleteEmployee = async (req, res) => {
     const { id } = req.params;
     try {
-        const db = getDB();
-        const { ObjectId } = require('mongodb');
-        await db.collection('attendance').deleteMany({ employee_id: { $in: (await db.collection('users').findOne({ _id: new ObjectId(id) })).employee_id } }); // Delete related attendance first
-        await db.collection('users').deleteOne({ _id: new ObjectId(id) });
+        await prisma.attendance.deleteMany({ where: { employee_id: id } });
+        await prisma.user.delete({ where: { id: parseInt(id) } });
         res.json({ message: 'Employee deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });

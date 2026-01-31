@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
-const { getDB, connectToMongoDB } = require('./mongoClient');
+const prisma = require('./prismaClient');
 const bcrypt = require('bcryptjs');
 
 const app = express();
@@ -39,26 +39,25 @@ app.get('/', async (req, res) => {
 
 const PORT = process.env.PORT || 5001;
 
-// Connect to MongoDB and setup admin
+// Setup admin
 async function initializeApp() {
-  await connectToMongoDB();
-
   // Initial Admin Setup
   const setupAdmin = async () => {
     try {
-      const db = getDB();
-      const userCount = await db.collection('users').countDocuments();
+      const userCount = await prisma.user.count();
       if (userCount === 0) {
         console.log('No users found. Creating initial Admin...');
         const hashedPassword = await bcrypt.hash('OdissiTech@2026', 10);
-        await db.collection('users').insertOne({
-          employee_id: 'ADMIN001',
-          name: 'Super Admin',
-          email: 'admin@otgs.co.in',
-          password: hashedPassword,
-          role: 'ADMIN',
-          status: true,
-          created_at: new Date()
+        await prisma.user.create({
+          data: {
+            employee_id: 'ADMIN001',
+            name: 'Super Admin',
+            email: 'admin@otgs.co.in',
+            password: hashedPassword,
+            role: 'ADMIN',
+            status: true,
+            created_at: new Date()
+          }
         });
         console.log('Admin created: admin@otgs.co.in / OdissiTech@2026');
       }
