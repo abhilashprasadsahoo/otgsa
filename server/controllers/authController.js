@@ -5,8 +5,7 @@ const prisma = require('../prismaClient');
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const db = getDB();
-    const user = await db.collection('users').findOne({ email });
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (!user.status) return res.status(403).json({ message: 'Account inactive' });
 
@@ -14,14 +13,14 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user._id.toString(), role: user.role, employee_id: user.employee_id },
+      { id: user.id.toString(), role: user.role, employee_id: user.employee_id },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
     res.json({
       token,
       user: {
-        id: user._id.toString(),
+        id: user.id.toString(),
         name: user.name,
         email: user.email,
         role: user.role,
