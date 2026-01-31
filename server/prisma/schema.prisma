@@ -36,8 +36,8 @@ model Attendance {
 }
 
 model AttendanceLog {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          Int      @id @default(autoincrement())
   employee_id String
   action      String
-  timestamp   DateTime @default(now()) @db.Date
+  timestamp   DateTime @default(now())
 }
