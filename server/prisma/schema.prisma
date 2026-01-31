@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  employee_id String   @unique
+  name        String
+  email       String   @unique
+  password    String
+  role        String   @default("EMPLOYEE")
+  status      Boolean  @default(true)
+  created_at  DateTime @default(now())
+  attendance  Attendance[]
+}
+
+model Attendance {
+  id          Int      @id @default(autoincrement())
+  employee_id String
+  user        User     @relation(fields: [employee_id], references: [employee_id])
+  date        String   // YYYY-MM-DD (keeps day-level uniqueness)
+  morning_in  DateTime?
+  lunch_out   DateTime?
+  lunch_in    DateTime?
+  lunch_in_remarks String?
+  office_out  DateTime?
+  remarks     String?
+  created_at  DateTime @default(now())
+
+  @@unique([employee_id, date])
+}
+
+model AttendanceLog {
+  id          Int      @id @default(autoincrement())
+  employee_id String
+  action      String
+  timestamp   DateTime @default(now())
+}
