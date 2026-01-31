@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
-const prisma = require('./prismaClient');
+const { getDB } = require('./mongoClient');
 const bcrypt = require('bcryptjs');
 
 const app = express();
@@ -17,7 +17,8 @@ app.use('/api/attendance', attendanceRoutes);
 app.get('/', async (req, res) => {
   try {
     // Check database connection
-    await prisma.user.count({ take: 1 });
+    const db = getDB();
+    await db.collection('users').countDocuments({ take: 1 });
     res.send(`
       <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
         <h1 style="color: #047857;">ODISSITECH Server is Running</h1>
