@@ -174,6 +174,7 @@ const EmployeeDashboard = () => {
                   <th className="p-3">Date</th>
                   <th className="p-3">Morning IN</th>
                   <th className="p-3">Lunch OUT</th>
+                  <th className="p-3">Lunch IN</th>
                   <th className="p-3">Office OUT</th>
                 </tr>
               </thead>
@@ -183,6 +184,7 @@ const EmployeeDashboard = () => {
                     <td className="p-3 font-medium">{record.date}</td>
                     <td className="p-3">{record.morning_in ? new Date(record.morning_in).toLocaleTimeString() : '-'}</td>
                     <td className="p-3">{record.lunch_out ? new Date(record.lunch_out).toLocaleTimeString() : '-'}</td>
+                    <td className="p-3">{record.lunch_in ? new Date(record.lunch_in).toLocaleTimeString() : '-'}</td>
                     <td className="p-3">{record.office_out ? new Date(record.office_out).toLocaleTimeString() : '-'}</td>
                   </tr>
                 ))}

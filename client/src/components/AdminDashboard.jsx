@@ -83,7 +83,7 @@ const AdminDashboard = () => {
   };
 
   const downloadExcel = () => {
-    window.open('http://localhost:5000/api/attendance/download', '_blank');
+    window.open('https://otgsa.onrender.com/api/attendance/download', '_blank');
   };
 
   return (

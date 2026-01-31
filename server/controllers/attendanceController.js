@@ -168,12 +168,42 @@ exports.deleteAttendance = async (req, res) => {
 };
 
 exports.downloadExcel = async (req, res) => {
-    // Regenerate Excel file to ensure latest data
-    await syncToExcel();
-    
-    if (fs.existsSync(EXCEL_FILE)) {
-        res.download(EXCEL_FILE);
-    } else {
-        res.status(404).json({ message: 'Excel file could not be generated' });
+    try {
+        // Fetch latest attendance data
+        const allAttendance = await prisma.attendance.findMany({
+            include: { user: true },
+            orderBy: { created_at: 'desc' }
+        });
+
+        // Prepare data for Excel
+        const data = allAttendance.map(record => ({
+            Date: record.date,
+            'Employee ID': record.employee_id,
+            'Employee Name': record.user ? record.user.name : 'Unknown',
+            'Morning IN': record.morning_in ? new Date(record.morning_in).toLocaleTimeString() : '',
+            'Remarks': record.remarks || '',
+            'Lunch OUT': record.lunch_out ? new Date(record.lunch_out).toLocaleTimeString() : '',
+            'Lunch IN': record.lunch_in ? new Date(record.lunch_in).toLocaleTimeString() : '',
+            'Office OUT': record.office_out ? new Date(record.office_out).toLocaleTimeString() : '',
+        }));
+
+        // Create Excel file in memory
+        const ws = xlsx.utils.json_to_sheet(data);
+        const wb = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(wb, ws, 'Attendance');
+
+        // Generate buffer
+        const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+        // Set headers for file download
+        const fileName = `attendance_${new Date().toISOString().split('T')[0]}.xlsx`;
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+        // Send the buffer
+        res.send(buffer);
+    } catch (error) {
+        console.error('Excel download error:', error);
+        res.status(500).json({ message: 'Failed to generate Excel file' });
     }
 };
