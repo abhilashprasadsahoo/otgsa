@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../prismaClient');
+const { getDB } = require('../mongoClient');
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
