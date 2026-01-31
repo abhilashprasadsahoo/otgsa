@@ -48,32 +48,31 @@ const syncToExcel = async () => {
 exports.markAttendance = async (req, res) => {
   const { employee_id } = req.user;
   const { type } = req.body; // morning_in, lunch_out, lunch_in, office_out
-  
+
   // Use local date string YYYY-MM-DD
   const date = new Date().toISOString().split('T')[0];
 
   try {
-    let attendance = await prisma.attendance.findUnique({
-      where: { employee_id_date: { employee_id, date } }
-    });
+    const db = getDB();
+    let attendance = await db.collection('attendance').findOne({ employee_id, date });
 
     if (!attendance) {
       if (type !== 'morning_in') {
         return res.status(400).json({ message: 'Must mark Morning IN first' });
       }
-      attendance = await prisma.attendance.create({
-        data: { 
-            employee_id, 
-            date, 
-            morning_in: new Date(),
-            remarks: req.body.remarks || null
-        }
+      const result = await db.collection('attendance').insertOne({
+        employee_id,
+        date,
+        morning_in: new Date(),
+        remarks: req.body.remarks || null,
+        created_at: new Date()
       });
+      attendance = { _id: result.insertedId, employee_id, date, morning_in: new Date(), remarks: req.body.remarks || null, created_at: new Date() };
     } else {
       if (attendance[type]) {
         return res.status(400).json({ message: 'Already marked' });
       }
-      
+
       // Basic Validation Logic Order
       if (type === 'lunch_out' && !attendance.morning_in) return res.status(400).json({ message: 'Morning IN missing' });
       if (type === 'lunch_in' && !attendance.lunch_out) return res.status(400).json({ message: 'Lunch OUT missing' });
@@ -81,7 +80,7 @@ exports.markAttendance = async (req, res) => {
 
       const updateData = {};
       updateData[type] = new Date();
-      
+
       if (req.body.remarks) {
           if (type === 'lunch_in') {
              updateData.lunch_in_remarks = req.body.remarks;
@@ -89,30 +88,39 @@ exports.markAttendance = async (req, res) => {
              updateData.remarks = attendance.remarks ? `${attendance.remarks} | ${req.body.remarks}` : req.body.remarks;
           }
       }
-      
-      attendance = await prisma.attendance.update({
-        where: { id: attendance.id },
-        data: updateData
-      });
+
+      await db.collection('attendance').updateOne({ _id: attendance._id }, { $set: updateData });
+      attendance = { ...attendance, ...updateData };
     }
 
     // Log
-    await prisma.attendanceLog.create({
-        data: { employee_id, action: type }
+    await db.collection('attendanceLog').insertOne({
+      employee_id,
+      action: type,
+      timestamp: new Date()
     });
 
     // Fetch attendance with related user for syncing
-    const attendanceWithUser = await prisma.attendance.findUnique({
-      where: { id: attendance.id },
-      include: { user: true }
-    });
+    const attendanceWithUser = await db.collection('attendance').aggregate([
+      { $match: { _id: attendance._id } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'employee_id',
+          foreignField: 'employee_id',
+          as: 'user'
+        }
+      },
+      { $unwind: '$user' }
+    ]).toArray();
+    const attendanceWithUserRecord = attendanceWithUser[0];
 
     // Sync (local Excel + Google Sheets if configured)
     syncToExcel();
     // Also attempt to append only the new/updated row to Google Sheets (faster incremental sync)
     if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON && process.env.GOOGLE_SHEET_ID) {
       try {
-        await sheetsService.appendAttendanceRow(attendanceWithUser);
+        await sheetsService.appendAttendanceRow(attendanceWithUserRecord);
       } catch (e) {
         console.error('Incremental sheets append failed:', e.message || e);
       }
@@ -165,7 +173,9 @@ exports.getAllAttendance = async (req, res) => {
 exports.deleteAttendance = async (req, res) => {
     const { id } = req.params;
     try {
-        await prisma.attendance.delete({ where: { id: parseInt(id) } });
+        const db = getDB();
+        const { ObjectId } = require('mongodb');
+        await db.collection('attendance').deleteOne({ _id: new ObjectId(id) });
         res.json({ message: 'Attendance record deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
