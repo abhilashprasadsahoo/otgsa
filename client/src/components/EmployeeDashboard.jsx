@@ -20,7 +20,7 @@ const EmployeeDashboard = () => {
 
   const fetchMyAttendance = async () => {
     try {
-      const res = await axios.get('/api/attendance/my');
+      const res = await axios.get('https://otgsa.onrender.com/api/attendance/my');
       setAttendance(res.data);
       const today = res.data.find(r => r.date === todayDate);
       setTodayRecord(today || {});
@@ -33,7 +33,7 @@ const EmployeeDashboard = () => {
     if (!remarks && !window.confirm(`Confirm mark ${type.replace('_', ' ').toUpperCase()}?`)) return;
 
     try {
-      await axios.post('/api/attendance/mark', { type, remarks });
+      await axios.post('https://otgsa.onrender.com/api/attendance/mark', { type, remarks });
       fetchMyAttendance();
       setShowRemarkModal(false);
       setRemarkText('');

@@ -18,7 +18,7 @@ const AdminDashboard = () => {
   const fetchEmployees = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('/api/auth/employees', {
+      const res = await axios.get('https://otgsa.onrender.com/api/auth/employees', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEmployees(res.data);
@@ -31,7 +31,7 @@ const AdminDashboard = () => {
   const fetchAttendance = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('/api/attendance/all', {
+      const res = await axios.get('https://otgsa.onrender.com/api/attendance/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAttendance(res.data);
@@ -44,7 +44,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/auth/register', newEmployee, {
+      await axios.post('https://otgsa.onrender.com/api/auth/register', newEmployee, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Employee Created Successfully');
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
       if (!window.confirm('Are you sure you want to delete this employee? This will also delete all their attendance records.')) return;
       try {
           const token = localStorage.getItem('token');
-          await axios.delete(`/api/auth/employees/${id}`, {
+          await axios.delete(`https://otgsa.onrender.com/api/auth/employees/${id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           fetchEmployees();
@@ -73,7 +73,7 @@ const AdminDashboard = () => {
       if (!window.confirm('Are you sure you want to delete this attendance record?')) return;
       try {
           const token = localStorage.getItem('token');
-          await axios.delete(`/api/attendance/${id}`, {
+          await axios.delete(`https://otgsa.onrender.com/api/attendance/${id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           fetchAttendance();
