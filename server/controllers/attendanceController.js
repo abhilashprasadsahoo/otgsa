@@ -2,6 +2,7 @@ const xlsx = require('xlsx');
 const path = require('path');
 const fs = require('fs');
 const sheetsService = require('../services/sheetsService');
+const prisma = require('../prismaClient');
 
 const EXCEL_FILE = path.join(__dirname, '../../attendance_sheet.xlsx');
 
