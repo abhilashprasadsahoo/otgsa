@@ -159,7 +159,7 @@ exports.getAllAttendance = async (req, res) => {
 exports.deleteAttendance = async (req, res) => {
     const { id } = req.params;
     try {
-        await prisma.attendance.delete({ where: { id: parseInt(id) } });
+        await prisma.attendance.delete({ where: { id: id } });
         res.json({ message: 'Attendance record deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
