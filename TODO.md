@@ -1,10 +1,19 @@
-# Remove Prisma and Use Direct MongoDB
+# Prisma MongoDB Migration Tasks
 
-## Steps to Complete
-- [ ] Update package.json to remove Prisma dependencies and add mongodb driver
-- [ ] Create MongoDB connection module
-- [ ] Update authController.js to use MongoDB directly
-- [ ] Update attendanceController.js to use MongoDB directly
-- [ ] Remove prismaClient.js and prisma folder
-- [ ] Update server.js to use MongoDB connection
-- [ ] Test the application
+## Root Causes Identified
+- Schema still configured for SQLite
+- Models using Int IDs instead of ObjectId
+- Mixing Prisma and native MongoDB driver
+- Missing Vercel postinstall script
+- Old SQLite files present
+
+## Tasks to Complete
+- [ ] Update schema.prisma to MongoDB with ObjectId
+- [ ] Add postinstall script to package.json
+- [ ] Update server.js to remove native MongoDB usage
+- [ ] Update attendanceController.js to use pure Prisma
+- [ ] Remove mongoClient.js dependencies
+- [ ] Clean up old SQLite files
+- [ ] Regenerate Prisma client
+- [ ] Test database connections
+- [ ] Verify Vercel deployment compatibility

@@ -16,9 +16,8 @@ app.use('/api/attendance', attendanceRoutes);
 
 app.get('/', async (req, res) => {
   try {
-    // Check database connection
-    const db = getDB();
-    await db.collection('users').countDocuments({ take: 1 });
+    // Check database connection using Prisma
+    await prisma.user.count();
     res.send(`
       <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
         <h1 style="color: #047857;">ODISSITECH Server is Running</h1>

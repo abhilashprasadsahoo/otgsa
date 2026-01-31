@@ -68,7 +68,7 @@ exports.deleteEmployee = async (req, res) => {
     const { id } = req.params;
     try {
         await prisma.attendance.deleteMany({ where: { employee_id: id } });
-        await prisma.user.delete({ where: { id: parseInt(id) } });
+        await prisma.user.delete({ where: { id: id } });
         res.json({ message: 'Employee deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
