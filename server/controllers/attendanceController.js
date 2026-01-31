@@ -1,4 +1,4 @@
-const prisma = require('../prismaClient');
+const { getDB } = require('../mongoClient');
 const xlsx = require('xlsx');
 const path = require('path');
 const fs = require('fs');
@@ -139,10 +139,23 @@ exports.getMyAttendance = async (req, res) => {
 
 exports.getAllAttendance = async (req, res) => {
     try {
-        const attendance = await prisma.attendance.findMany({
-            include: { user: true },
-            orderBy: { date: 'desc' }
-        });
+        const db = getDB();
+        const attendance = await db.collection('attendance').aggregate([
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'employee_id',
+                    foreignField: 'employee_id',
+                    as: 'user'
+                }
+            },
+            {
+                $unwind: '$user'
+            },
+            {
+                $sort: { date: -1 }
+            }
+        ]).toArray();
         res.json(attendance);
     } catch (err) {
         res.status(500).json({ error: err.message });

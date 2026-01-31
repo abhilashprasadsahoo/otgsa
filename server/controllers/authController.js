@@ -5,7 +5,8 @@ const prisma = require('../prismaClient');
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const db = getDB();
+    const user = await db.collection('users').findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (!user.status) return res.status(403).json({ message: 'Account inactive' });
 
@@ -13,19 +14,19 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user.id, role: user.role, employee_id: user.employee_id }, 
-      process.env.JWT_SECRET, 
+      { id: user._id.toString(), role: user.role, employee_id: user.employee_id },
+      process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
-    res.json({ 
-      token, 
-      user: { 
-        id: user.id, 
-        name: user.name, 
-        email: user.email, 
-        role: user.role, 
-        employee_id: user.employee_id 
-      } 
+    res.json({
+      token,
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        employee_id: user.employee_id
+      }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -67,8 +68,10 @@ exports.register = async (req, res) => {
 exports.deleteEmployee = async (req, res) => {
     const { id } = req.params;
     try {
-        await prisma.attendance.deleteMany({ where: { user: { id: parseInt(id) } } }); // Delete related attendance first
-        await prisma.user.delete({ where: { id: parseInt(id) } });
+        const db = getDB();
+        const { ObjectId } = require('mongodb');
+        await db.collection('attendance').deleteMany({ employee_id: { $in: (await db.collection('users').findOne({ _id: new ObjectId(id) })).employee_id } }); // Delete related attendance first
+        await db.collection('users').deleteOne({ _id: new ObjectId(id) });
         res.json({ message: 'Employee deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
