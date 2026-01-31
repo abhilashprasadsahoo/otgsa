@@ -50,17 +50,17 @@ async function initializeApp() {
       const userCount = await db.collection('users').countDocuments();
       if (userCount === 0) {
         console.log('No users found. Creating initial Admin...');
-        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const hashedPassword = await bcrypt.hash('OdissiTech@2026', 10);
         await db.collection('users').insertOne({
           employee_id: 'ADMIN001',
           name: 'Super Admin',
-          email: 'admin@odissitech.com',
+          email: 'admin@otgs.co.in',
           password: hashedPassword,
           role: 'ADMIN',
           status: true,
           created_at: new Date()
         });
-        console.log('Admin created: admin@odissitech.com / admin123');
+        console.log('Admin created: admin@otgs.co.in / OdissiTech@2026');
       }
     } catch (err) {
       console.error('Error in setupAdmin:', err.message);
