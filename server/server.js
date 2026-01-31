@@ -39,30 +39,38 @@ app.get('/', async (req, res) => {
 
 const PORT = process.env.PORT || 5001;
 
-// Initial Admin Setup
-const setupAdmin = async () => {
-  try {
-    const userCount = await prisma.user.count();
-    if (userCount === 0) {
-      console.log('No users found. Creating initial Admin...');
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      await prisma.user.create({
-        data: {
+// Connect to MongoDB and setup admin
+async function initializeApp() {
+  await connectToMongoDB();
+
+  // Initial Admin Setup
+  const setupAdmin = async () => {
+    try {
+      const db = getDB();
+      const userCount = await db.collection('users').countDocuments();
+      if (userCount === 0) {
+        console.log('No users found. Creating initial Admin...');
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        await db.collection('users').insertOne({
           employee_id: 'ADMIN001',
           name: 'Super Admin',
           email: 'admin@odissitech.com',
           password: hashedPassword,
-          role: 'ADMIN'
-        }
-      });
-      console.log('Admin created: admin@odissitech.com / admin123');
+          role: 'ADMIN',
+          status: true,
+          created_at: new Date()
+        });
+        console.log('Admin created: admin@odissitech.com / admin123');
+      }
+    } catch (err) {
+      console.error('Error in setupAdmin:', err.message);
     }
-  } catch (err) {
-    console.error('Error in setupAdmin:', err.message);
-  }
-};
+  };
 
-setupAdmin();
+  await setupAdmin();
+}
+
+initializeApp();
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
